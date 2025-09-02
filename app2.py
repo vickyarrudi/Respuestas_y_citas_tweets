@@ -50,7 +50,6 @@ def sanitize_tweet_id(raw: str | int | None) -> str | None:
 
 def _ensure_cols(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     return df[[c for c in cols if c in df.columns]]
-import re
 
 # Soporta x.com y twitter.com, con o sin /i/web/, query params, etc.
 _TWEET_ID_PATTERNS = [
@@ -99,9 +98,9 @@ def main_app():
             help="Ej: 'Opiniones de clientes sobre un nuevo producto financiero'."
         )
        
-        st.markdown("---")
-        if st.button("Cerrar Sesión", key="logout_sidebar"):
-            logout()
+        #st.markdown("---")
+        #if st.button("Cerrar Sesión", key="logout_sidebar"):
+            #logout()
 
     # --- Validación de APIFY ---
     if not apify_token:
@@ -267,7 +266,7 @@ Tweets:
             return f"No se pudieron extraer temas. Error: {e}"
 
 
-    tweet_id = sanitize_tweet_id(id_input) if id_input else None
+    tweet_id = extract_tweet_id_from_url(url_input) if url_input else None
 
     if tweet_id:
         st.subheader("📥 Descargando datos de X/Twitter…")
@@ -518,5 +517,6 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
