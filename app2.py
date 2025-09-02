@@ -5,15 +5,12 @@ import plotly.express as px
 import streamlit as st
 from apify_client import ApifyClient
 
-# IA (Gemini) opcional
+# Gemini
 try:
     import google.generativeai as genai
 except Exception:
     genai = None
 
-# =============================================================================
-# Auth stubs (ajusta a tu flujo real si hace falta)
-# =============================================================================
 def logout():
     st.session_state["logged_in"] = False
     st.rerun()
@@ -252,9 +249,7 @@ Tweets:
         except Exception as e:
             return f"No se pudieron extraer temas. Error: {e}"
 
-    # =============================================================================
-    # Flujo principal
-    # =============================================================================
+
     tweet_id = sanitize_tweet_id(id_input) if id_input else None
 
     if tweet_id:
@@ -501,3 +496,4 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
