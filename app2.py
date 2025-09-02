@@ -21,9 +21,6 @@ def login_page():
         st.session_state["logged_in"] = True
         st.rerun()
 
-# =============================================================================
-# Helpers generales
-# =============================================================================
 def read_secret_safe(key: str, env_key: str):
     """
     Busca credenciales en este orden:
@@ -53,6 +50,26 @@ def sanitize_tweet_id(raw: str | int | None) -> str | None:
 
 def _ensure_cols(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     return df[[c for c in cols if c in df.columns]]
+import re
+
+# Soporta x.com y twitter.com, con o sin /i/web/, query params, etc.
+_TWEET_ID_PATTERNS = [
+    re.compile(r"https?://(?:www\.)?(?:x|twitter)\.com/[^/]+/status/(\d+)", re.I),
+    re.compile(r"https?://(?:www\.)?(?:x|twitter)\.com/i/(?:web/)?status/(\d+)", re.I),
+]
+
+def extract_tweet_id_from_url(value: str | None) -> str | None:
+    if not value:
+        return None
+    s = value.strip()
+    # Si pegaron un ID por error, igual funciona
+    if s.isdigit():
+        return s
+    for rx in _TWEET_ID_PATTERNS:
+        m = rx.search(s)
+        if m:
+            return m.group(1)
+    return None
 
 # =============================================================================
 # App principal
@@ -72,10 +89,10 @@ def main_app():
     # --- Sidebar ---
     with st.sidebar:
         st.header("⚙️ Configuración")
-        id_input = st.text_area(
-            "Tweet ID (solo números)",
-            placeholder="Ej: 1872222222222222222",
-            help="Es el número al final de la URL del tweet. Solo ingresa dígitos."
+        url_input = st.text_input(
+            "URL del Tweet",
+            placeholder="https://x.com/usuario/status/1234567890123456789",
+            help="Pega la URL completa del tweet."
         )
         contexto = st.text_area(
             "Contexto para el análisis de sentimiento (opcional)",
@@ -254,13 +271,19 @@ Tweets:
 
     if tweet_id:
         st.subheader("📥 Descargando datos de X/Twitter…")
-
-        # Obtener datos
         df_replies = get_replies(tweet_id)
+        # 🔴 Excluir el tweet original de replies (si tu actor lo incluye)
+        if "id" in df_replies.columns:
+            df_replies = df_replies[df_replies["id"].astype(str) != str(tweet_id)]
+    
         if "url" in df_replies.columns:
             df_replies = df_replies.drop_duplicates(subset=["url"]).reset_index(drop=True)
-
+    
         df_quotes = get_quotes(tweet_id)
+        # 🔴 Excluir el tweet original de quotes también (por si apareciera)
+        if "id" in df_quotes.columns:
+            df_quotes = df_quotes[df_quotes["id"].astype(str) != str(tweet_id)]
+    
         if "url" in df_quotes.columns:
             df_quotes = df_quotes.drop_duplicates(subset=["url"]).reset_index(drop=True)
 
@@ -484,9 +507,8 @@ Tweets:
             st.markdown("---")
             st.info("✨ Aplicación creada con Streamlit, Apify y Google Gemini.")
 
-    elif id_input:
-        # Había algo escrito pero no era ID válido
-        st.error("El Tweet ID debe contener solo números (sin URL ni texto).")
+    elif url_input:
+        st.error("No pude extraer un ID válido de esa URL. Revisa que tenga el formato /status/<número>.")
 
 # --- Entrada a la app ---
 if "logged_in" not in st.session_state:
@@ -496,4 +518,5 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
