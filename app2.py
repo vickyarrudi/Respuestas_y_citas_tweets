@@ -4,6 +4,8 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 from apify_client import ApifyClient
+from xhtml2pdf import pisa
+import io
 
 # Gemini
 try:
@@ -512,6 +514,22 @@ Tweets:
                 mime="text/html",
             )
 
+            # ---- Convertir HTML a PDF y descargar ----
+            def html_to_pdf_bytes(html_str: str) -> bytes:
+                buf = io.BytesIO()
+                # pisa acepta texto (no bytes); forzamos utf-8
+                pisa.CreatePDF(io.StringIO(html_str), dest=buf, encoding='utf-8')
+                return buf.getvalue()
+            
+            pdf_bytes = html_to_pdf_bytes(html_report)
+            
+            st.download_button(
+                "Descargar informe (PDF)",
+                data=pdf_bytes,
+                file_name="informe_tweets_analizados.pdf",
+                mime="application/pdf",
+            )
+
             st.markdown("---")
             st.info("✨ Aplicación creada con Streamlit, Apify y Google Gemini.")
 
@@ -526,6 +544,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
