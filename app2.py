@@ -496,7 +496,7 @@ Tweets:
 
             # ----- Descarga -----
             st.markdown("---")
-
+            
             # HTML sencillo que luego se puede guardar como PDF desde el navegador
             html = f"""
             <h1>Análisis de respuestas y citas de Tweets</h1>
@@ -505,23 +505,27 @@ Tweets:
             <p><b>Respuestas:</b> {len(df_replies) if 'df_replies' in locals() else 0} |
             <b>Citas:</b> {len(df_quotes) if 'df_quotes' in locals() else 0}</p>
             <h2>Temas principales (IA)</h2>
-            <pre style="white-space:pre-wrap">{(resultados or '').strip() if isinstance(resultados,str) else '(No disponible)'}</pre>
+            <pre style="white-space:pre-wrap">{(resultados or '').strip() if isinstance(resultados, str) else '(No disponible)'}</pre>
             """
+            
             st.download_button(
                 "Descargar informe (HTML)",
                 data=html.encode("utf-8"),
                 file_name="informe.html",
                 mime="text/html",
             )
-
-            # ---- Convertir HTML a PDF y descargar ----
+            
+            # ---- Convertir ese HTML a PDF y descargar ----
+            from xhtml2pdf import pisa
+            import io
+            
             def html_to_pdf_bytes(html_str: str) -> bytes:
                 buf = io.BytesIO()
                 # pisa acepta texto (no bytes); forzamos utf-8
-                pisa.CreatePDF(io.StringIO(html_str), dest=buf, encoding='utf-8')
+                pisa.CreatePDF(io.StringIO(html_str), dest=buf, encoding="utf-8")
                 return buf.getvalue()
             
-            pdf_bytes = html_to_pdf_bytes(html_report)
+            pdf_bytes = html_to_pdf_bytes(html)  # <--- usar la MISMA variable 'html'
             
             st.download_button(
                 "Descargar informe (PDF)",
@@ -529,9 +533,12 @@ Tweets:
                 file_name="informe_tweets_analizados.pdf",
                 mime="application/pdf",
             )
-
+            
             st.markdown("---")
             st.info("✨ Aplicación creada con Streamlit, Apify y Google Gemini.")
+
+            
+            
 
     elif url_input:
         st.error("No pude extraer un ID válido de esa URL. Revisa que tenga el formato /status/<número>.")
@@ -544,6 +551,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
