@@ -496,50 +496,39 @@ Tweets:
 
             # ----- Descarga -----
             st.markdown("---")
+            # ========= PDF directo desde el mismo HTML =========
+
+
+            # 1) Aseguramos documento HTML completo
+            html_doc = f"""<!doctype html>
+            <html lang="es">
+            <head>
+            <meta charset="utf-8">
+            <title>Informe Tweets</title>
+            <style>
+              body {{ font-family: Arial, Helvetica, sans-serif; font-size: 12px; }}
+              h1, h2 {{ margin: 0 0 8px; }}
+              pre {{ white-space: pre-wrap; word-wrap: break-word; }}
+              table {{ border-collapse: collapse; width:100%; }}
+              th, td {{ border:1px solid #ccc; padding:6px; vertical-align: top; }}
+            </style>
+            </head>
+            <body>
+            {html}
+            </body>
+            </html>"""
             
-            # HTML sencillo que luego se puede guardar como PDF desde el navegador
-        html = f"""
-        <h1>Análisis de respuestas y citas de Tweets</h1>
-        <p><b>Tweet:</b> {url_input or ''}</p>
-        <p><b>Contexto:</b> {contexto or ''}</p>
-        <p><b>Respuestas:</b> {len(df_replies) if 'df_replies' in locals() else 0} |
-        <b>Citas:</b> {len(df_quotes) if 'df_quotes' in locals() else 0}</p>
-        <h2>Temas principales (IA)</h2>
-        <pre style="white-space:pre-wrap">{(resultados or '').strip() if isinstance(resultados, str) else '(No disponible)'}</pre>
-        """
-            
-        st.download_button(
-            "Descargar informe (HTML)",
-            data=html.encode("utf-8"),
-            file_name="informe.html",
-            mime="text/html",
-        )
-            
-        # ---- Convertir ese HTML a PDF y descargar (a prueba de balas) ----
-        # html es la variable que acabás de construir arriba
-        assert isinstance(html, str), "La variable 'html' debe ser un string de HTML"
-        
-        try:
-            from xhtml2pdf import pisa
-        except Exception as e:
-            st.warning(
-                "No pude cargar xhtml2pdf. Agrega `xhtml2pdf==0.2.11` a requirements.txt "
-                "y reinicia la app. Detalle: {}".format(e)
-            )
-        else:
-            def html_to_pdf_bytes(html_str: str) -> bytes:
+            # 2) Convertir a PDF con chequeo de errores
+            def html_to_pdf_bytes(html_str: str):
                 buf = io.BytesIO()
-                # pisa.CreatePDF espera texto; usamos StringIO y forzamos UTF-8
-                pisa.CreatePDF(io.StringIO(html_str), dest=buf, encoding="utf-8")
-                return buf.getvalue()
-        
-            pdf_bytes = b""
-            try:
-                pdf_bytes = html_to_pdf_bytes(html)  # usa la MISMA variable 'html'
-            except Exception as e:
-                st.error(f"Falló la conversión a PDF: {e}")
-        
-            if pdf_bytes and len(pdf_bytes) > 1000:
+                # pisa.CreatePDF devuelve un objeto con propiedad .err
+                result = pisa.CreatePDF(io.StringIO(html_str), dest=buf, encoding="utf-8")
+                return buf.getvalue(), result.err
+            
+            pdf_bytes, pdf_err = html_to_pdf_bytes(html_doc)
+            
+            # 3) Mostrar botón o error claro
+            if not pdf_err and pdf_bytes and len(pdf_bytes) > 500:
                 st.download_button(
                     "Descargar informe (PDF)",
                     data=pdf_bytes,
@@ -548,11 +537,13 @@ Tweets:
                     key="dl_pdf"
                 )
             else:
-                st.info("Generé el HTML pero no pude producir PDF (bytes vacíos). "
-                        "Revisa que el HTML no esté vacío y que xhtml2pdf esté instalado.")
-            
-        st.markdown("---")
-        st.info("✨ Aplicación creada con Streamlit, Apify y Google Gemini.")            
+                st.warning(
+                    "No pude generar el PDF con xhtml2pdf. "
+                    "Revisa que `xhtml2pdf==0.2.11` esté instalado y que el HTML no esté vacío."
+                )
+
+            st.markdown("---")
+            st.info("✨ Aplicación creada con Streamlit, Apify y Google Gemini.")            
 
     elif url_input:
         st.error("No pude extraer un ID válido de esa URL. Revisa que tenga el formato /status/<número>.")
@@ -565,6 +556,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
