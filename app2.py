@@ -515,20 +515,41 @@ Tweets:
             mime="text/html",
         )
             
-        def html_to_pdf_bytes(html_str: str) -> bytes:
-            buf = io.BytesIO()
-            # pisa acepta texto (no bytes); forzamos utf-8
-            pisa.CreatePDF(io.StringIO(html_str), dest=buf, encoding="utf-8")
-            return buf.getvalue()
-            
-        pdf_bytes = html_to_pdf_bytes(html)  # <--- usar la MISMA variable 'html'
-            
-        st.download_button(
-            "Descargar informe (PDF)",
-            data=pdf_bytes,
-            file_name="informe_tweets_analizados.pdf",
-            mime="application/pdf",
-        )
+        # ---- Convertir ese HTML a PDF y descargar (a prueba de balas) ----
+        # html es la variable que acabás de construir arriba
+        assert isinstance(html, str), "La variable 'html' debe ser un string de HTML"
+        
+        try:
+            from xhtml2pdf import pisa
+        except Exception as e:
+            st.warning(
+                "No pude cargar xhtml2pdf. Agrega `xhtml2pdf==0.2.11` a requirements.txt "
+                "y reinicia la app. Detalle: {}".format(e)
+            )
+        else:
+            def html_to_pdf_bytes(html_str: str) -> bytes:
+                buf = io.BytesIO()
+                # pisa.CreatePDF espera texto; usamos StringIO y forzamos UTF-8
+                pisa.CreatePDF(io.StringIO(html_str), dest=buf, encoding="utf-8")
+                return buf.getvalue()
+        
+            pdf_bytes = b""
+            try:
+                pdf_bytes = html_to_pdf_bytes(html)  # usa la MISMA variable 'html'
+            except Exception as e:
+                st.error(f"Falló la conversión a PDF: {e}")
+        
+            if pdf_bytes and len(pdf_bytes) > 1000:
+                st.download_button(
+                    "Descargar informe (PDF)",
+                    data=pdf_bytes,
+                    file_name="informe_tweets_analizados.pdf",
+                    mime="application/pdf",
+                    key="dl_pdf"
+                )
+            else:
+                st.info("Generé el HTML pero no pude producir PDF (bytes vacíos). "
+                        "Revisa que el HTML no esté vacío y que xhtml2pdf esté instalado.")
             
         st.markdown("---")
         st.info("✨ Aplicación creada con Streamlit, Apify y Google Gemini.")            
@@ -544,6 +565,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
