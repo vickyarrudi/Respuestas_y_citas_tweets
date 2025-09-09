@@ -494,14 +494,6 @@ Tweets:
 
             # ----- Descarga -----
             st.markdown("---")
-            st.subheader("⬇️ Descargar Resultados")
-            csv = df_todos.to_csv(index=False).encode("utf-8")
-            st.download_button(
-                label="Descargar resultados completos (CSV)",
-                data=csv,
-                file_name="tweets_analizados.csv",
-                mime="text/csv",
-            )
 
             # HTML sencillo que luego se puede guardar como PDF desde el navegador
             html = f"""
@@ -513,7 +505,6 @@ Tweets:
             <h2>Temas principales (IA)</h2>
             <pre style="white-space:pre-wrap">{(resultados or '').strip() if isinstance(resultados,str) else '(No disponible)'}</pre>
             """
-            
             st.download_button(
                 "Descargar informe (HTML)",
                 data=html.encode("utf-8"),
@@ -535,6 +526,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
