@@ -503,6 +503,24 @@ Tweets:
                 mime="text/csv",
             )
 
+            # HTML sencillo que luego se puede guardar como PDF desde el navegador
+            html = f"""
+            <h1>Análisis de respuestas y citas de Tweets</h1>
+            <p><b>Tweet:</b> {url_input or ''}</p>
+            <p><b>Contexto:</b> {contexto or ''}</p>
+            <p><b>Respuestas:</b> {len(df_replies) if 'df_replies' in locals() else 0} |
+            <b>Citas:</b> {len(df_quotes) if 'df_quotes' in locals() else 0}</p>
+            <h2>Temas principales (IA)</h2>
+            <pre style="white-space:pre-wrap">{(resultados or '').strip() if isinstance(resultados,str) else '(No disponible)'}</pre>
+            """
+            
+            st.download_button(
+                "Descargar informe (HTML)",
+                data=html.encode("utf-8"),
+                file_name="informe.html",
+                mime="text/html",
+            )
+
             st.markdown("---")
             st.info("✨ Aplicación creada con Streamlit, Apify y Google Gemini.")
 
@@ -517,6 +535,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
