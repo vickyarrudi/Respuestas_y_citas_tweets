@@ -494,8 +494,6 @@ Tweets:
 
             # ----- Descarga -----
             st.markdown("---")
-            # ========= PDF directo desde el mismo HTML =========
-            st.markdown("---")
             st.info("✨ Aplicación creada con Streamlit, Apify y Google Gemini.")            
 
     elif url_input:
@@ -509,6 +507,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
