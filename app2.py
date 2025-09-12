@@ -495,51 +495,6 @@ Tweets:
             # ----- Descarga -----
             st.markdown("---")
             # ========= PDF directo desde el mismo HTML =========
-
-
-            # 1) Aseguramos documento HTML completo
-            html_doc = f"""<!doctype html>
-            <html lang="es">
-            <head>
-            <meta charset="utf-8">
-            <title>Informe Tweets</title>
-            <style>
-              body {{ font-family: Arial, Helvetica, sans-serif; font-size: 12px; }}
-              h1, h2 {{ margin: 0 0 8px; }}
-              pre {{ white-space: pre-wrap; word-wrap: break-word; }}
-              table {{ border-collapse: collapse; width:100%; }}
-              th, td {{ border:1px solid #ccc; padding:6px; vertical-align: top; }}
-            </style>
-            </head>
-            <body>
-            {html}
-            </body>
-            </html>"""
-            
-            # 2) Convertir a PDF con chequeo de errores
-            def html_to_pdf_bytes(html_str: str):
-                buf = io.BytesIO()
-                # pisa.CreatePDF devuelve un objeto con propiedad .err
-                result = pisa.CreatePDF(io.StringIO(html_str), dest=buf, encoding="utf-8")
-                return buf.getvalue(), result.err
-            
-            pdf_bytes, pdf_err = html_to_pdf_bytes(html_doc)
-            
-            # 3) Mostrar botón o error claro
-            if not pdf_err and pdf_bytes and len(pdf_bytes) > 500:
-                st.download_button(
-                    "Descargar informe (PDF)",
-                    data=pdf_bytes,
-                    file_name="informe_tweets_analizados.pdf",
-                    mime="application/pdf",
-                    key="dl_pdf"
-                )
-            else:
-                st.warning(
-                    "No pude generar el PDF con xhtml2pdf. "
-                    "Revisa que `xhtml2pdf==0.2.11` esté instalado y que el HTML no esté vacío."
-                )
-
             st.markdown("---")
             st.info("✨ Aplicación creada con Streamlit, Apify y Google Gemini.")            
 
@@ -554,6 +509,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
