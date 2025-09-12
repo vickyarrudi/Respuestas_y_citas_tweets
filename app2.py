@@ -4,8 +4,6 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 from apify_client import ApifyClient
-from xhtml2pdf import pisa
-import io
 
 # Gemini
 try:
@@ -556,6 +554,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
