@@ -3,4 +3,4 @@ apify-client
 pandas
 google-generativeai
 plotly
-xhtml2pdf==0.2.11
+
