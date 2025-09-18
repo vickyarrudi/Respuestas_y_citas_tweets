@@ -341,10 +341,30 @@ Tweets:
         # Previews
         if not df_replies.empty:
             st.write("### Algunas Respuestas")
-            st.dataframe(df_replies.head(5), use_container_width=True)
+            st.data_editor(
+                df_replies.head(5),
+                column_config={
+                    "author/profilePicture": st.column_config.ImageColumn("Foto"),
+                    "url": st.column_config.LinkColumn("Tweet"),
+                    "author/userName": st.column_config.TextColumn("Usuario"),
+                    "text": st.column_config.TextColumn("Contenido"),
+                },
+                hide_index=True,
+                use_container_width=True
+            )
         if not df_quotes.empty:
             st.write("### Algunas Citas")
-            st.dataframe(df_quotes.head(5), use_container_width=True)
+            st.data_editor(
+                df_quotes.head(5),
+                column_config={
+                    "author/profilePicture": st.column_config.ImageColumn("Foto"),
+                    "url": st.column_config.LinkColumn("Tweet"),
+                    "author/userName": st.column_config.TextColumn("Usuario"),
+                    "text": st.column_config.TextColumn("Contenido"),
+                },
+                hide_index=True,
+                use_container_width=True
+            )
 
         # ---------- Análisis con IA ----------
         st.subheader("🤖 Análisis con Gemini")
@@ -557,6 +577,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
