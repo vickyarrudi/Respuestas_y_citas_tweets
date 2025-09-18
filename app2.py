@@ -271,6 +271,7 @@ Tweets:
     if tweet_id:
         st.subheader("📥 Descargando datos de X/Twitter…")
         df_replies = get_replies(tweet_id)
+    
         # 🔴 Excluir el tweet original de replies (si tu actor lo incluye)
         if "id" in df_replies.columns:
             df_replies = df_replies[df_replies["id"].astype(str) != str(tweet_id)]
@@ -279,31 +280,63 @@ Tweets:
             df_replies = df_replies.drop_duplicates(subset=["url"]).reset_index(drop=True)
     
         df_quotes = get_quotes(tweet_id)
+    
         # 🔴 Excluir el tweet original de quotes también (por si apareciera)
         if "id" in df_quotes.columns:
             df_quotes = df_quotes[df_quotes["id"].astype(str) != str(tweet_id)]
     
         if "url" in df_quotes.columns:
             df_quotes = df_quotes.drop_duplicates(subset=["url"]).reset_index(drop=True)
-
+    
         st.success(f"✅ {len(df_replies)} respuestas y {len(df_quotes)} citas descargadas.")
-        # --- Métricas de Alcance e Interacciones (con estilo grande) ---
-            total_views = df['viewCount'].sum()
-            total_interacciones = (
-                df[['likeCount', 'replyCount', 'retweetCount', 'quoteCount', 'bookmarkCount']]
-                .fillna(0).sum().sum()
+    
+        # --- Métricas de Alcance e Interacciones ---
+        # Unificamos los datasets para calcular métricas totales
+        df_all = pd.concat([df_replies, df_quotes], ignore_index=True)
+    
+        # Detectar la columna de vistas disponible
+        candidate_view_cols = [
+            "viewCount", "views", "impressions", "impression_count",
+            "public_metrics.impression_count"
+        ]
+        views_col = next((c for c in candidate_view_cols if c in df_all.columns), None)
+    
+        if views_col is None:
+            total_views = 0
+            st.warning(
+                "No encontré columna de vistas. Busqué: "
+                + ", ".join(candidate_view_cols)
+                + ". Ajusta el nombre de columna según tu actor."
             )
-
-            st.markdown(f"""
-            <div style="text-align: center; padding: 20px 0;">
-                <div style="font-size: 2.2em; font-weight: bold; color: #FFFFFF;">
-                    📈 Alcance Total: {int(total_views):,} visualizaciones
-                </div>
-                <div style="font-size: 2.2em; font-weight: bold; color: #FFFFFF;">
-                    💬 Interacciones Totales: {int(total_interacciones):,}
-                </div>
+        else:
+            total_views = pd.to_numeric(df_all[views_col], errors="coerce").fillna(0).sum()
+    
+        # Sumar interacciones (solo columnas que existan)
+        interaction_cols = ["likeCount", "replyCount", "retweetCount", "quoteCount", "bookmarkCount"]
+        present_inter_cols = [c for c in interaction_cols if c in df_all.columns]
+        if present_inter_cols:
+            total_interacciones = (
+                df_all[present_inter_cols]
+                .apply(pd.to_numeric, errors="coerce")
+                .fillna(0)
+                .sum()
+                .sum()
+            )
+        else:
+            total_interacciones = 0
+    
+        # Render de las métricas en grande
+        st.markdown(f"""
+        <div style="text-align: center; padding: 20px 0;">
+            <div style="font-size: 2.2em; font-weight: bold; color: #FFFFFF;">
+                📈 Alcance Total: {int(total_views):,} visualizaciones
             </div>
-            """, unsafe_allow_html=True)
+            <div style="font-size: 2.2em; font-weight: bold; color: #FFFFFF;">
+                💬 Interacciones Totales: {int(total_interacciones):,}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
 
         # Previews
         if not df_replies.empty:
@@ -524,6 +557,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
