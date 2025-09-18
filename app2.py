@@ -97,6 +97,7 @@ def main_app():
             "Contexto para el análisis de sentimiento (opcional)",
             help="Ej: 'Opiniones de clientes sobre un nuevo producto financiero'."
         )
+        ejecutar = st.button("🚀 Ejecutar")
        
         #st.markdown("---")
         #if st.button("Cerrar Sesión", key="logout_sidebar"):
@@ -268,7 +269,7 @@ Tweets:
 
     tweet_id = extract_tweet_id_from_url(url_input) if url_input else None
 
-    if tweet_id:
+    if tweet_id and ejecutar:
         st.subheader("📥 Descargando datos de X…")
         df_replies = get_replies(tweet_id)
     
@@ -577,6 +578,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
