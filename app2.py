@@ -178,7 +178,7 @@ Tweets:
 # ===================== App =====================
 def main_app():
     st.image("https://publicalab.com/assets/imgs/logo-publica-blanco.svg", width=200)
-    st.markdown("<h1 class='big-title'> Twitter Scraper & Análisis de Respuestas y Citas · Streamlit </h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='big-title'> Análisis de Respuestas y Citas - X </h1>", unsafe_allow_html=True)
 
     # Credenciales
     apify_token = read_secret_safe("apify_token", "APIFY_TOKEN")
@@ -447,3 +447,4 @@ if "logged_in" not in st.session_state:
 
 if st.session_state["logged_in"]:
     main_app()
+
