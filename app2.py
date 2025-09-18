@@ -328,10 +328,10 @@ Tweets:
         # Render de las métricas en grande
         st.markdown(f"""
         <div style="text-align: center; padding: 20px 0;">
-            <div style="font-size: 2.2em; font-weight: bold; color: #FFFFFF;">
+            <div style="font-size: 1.5em; font-weight: bold; color: #FFFFFF;">
                 📈 Alcance Total: {int(total_views):,} visualizaciones
             </div>
-            <div style="font-size: 2.2em; font-weight: bold; color: #FFFFFF;">
+            <div style="font-size: 1.5em; font-weight: bold; color: #FFFFFF;">
                 💬 Interacciones Totales: {int(total_interacciones):,}
             </div>
         </div>
@@ -577,6 +577,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
