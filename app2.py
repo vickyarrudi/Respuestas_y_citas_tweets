@@ -269,7 +269,7 @@ Tweets:
     tweet_id = extract_tweet_id_from_url(url_input) if url_input else None
 
     if tweet_id:
-        st.subheader("📥 Descargando datos de X/Twitter…")
+        st.subheader("📥 Descargando datos de X…")
         df_replies = get_replies(tweet_id)
     
         # 🔴 Excluir el tweet original de replies (si tu actor lo incluye)
@@ -577,6 +577,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
