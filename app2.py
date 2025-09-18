@@ -66,7 +66,7 @@ def get_replies(tweet_id: str, token: str) -> pd.DataFrame:
         client = get_apify_client(token)
         run = client.actor("kaitoeasyapi/twitter-reply").call(run_input={
             "conversation_ids": [tweet_id],
-            "maxItems": 1000
+            "maxItems": 3000
         })
         items = client.dataset(run["defaultDatasetId"]).list_items().items or []
         df = pd.DataFrame(items)
@@ -105,7 +105,7 @@ def get_quotes(tweet_id: str, token: str) -> pd.DataFrame:
         run = client.actor("kaitoeasyapi/twitter-x-data-tweet-scraper-pay-per-result-cheapest").call(run_input={
             "filter:quote": True,
             "quoted_tweet_id": str(tweet_id),
-            "maxItems": 1000
+            "maxItems": 3000
         })
         items = client.dataset(run["defaultDatasetId"]).list_items().items or []
         df = pd.DataFrame(items)
@@ -447,4 +447,5 @@ if "logged_in" not in st.session_state:
 
 if st.session_state["logged_in"]:
     main_app()
+
 
