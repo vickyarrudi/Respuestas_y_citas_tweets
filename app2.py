@@ -287,6 +287,23 @@ Tweets:
             df_quotes = df_quotes.drop_duplicates(subset=["url"]).reset_index(drop=True)
 
         st.success(f"✅ {len(df_replies)} respuestas y {len(df_quotes)} citas descargadas.")
+        # --- Métricas de Alcance e Interacciones (con estilo grande) ---
+            total_views = df['viewCount'].sum()
+            total_interacciones = (
+                df[['likeCount', 'replyCount', 'retweetCount', 'quoteCount', 'bookmarkCount']]
+                .fillna(0).sum().sum()
+            )
+
+            st.markdown(f"""
+            <div style="text-align: center; padding: 20px 0;">
+                <div style="font-size: 2.2em; font-weight: bold; color: #FFFFFF;">
+                    📈 Alcance Total: {int(total_views):,} visualizaciones
+                </div>
+                <div style="font-size: 2.2em; font-weight: bold; color: #FFFFFF;">
+                    💬 Interacciones Totales: {int(total_interacciones):,}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         # Previews
         if not df_replies.empty:
@@ -507,6 +524,7 @@ if st.session_state["logged_in"]:
     main_app()
 else:
     login_page()
+
 
 
 
