@@ -56,6 +56,19 @@ def extract_tweet_id_from_url(value: str | None) -> str | None:
 def get_apify_client(token: str) -> ApifyClient:
     return ApifyClient(token)
 
+
+def extract_multiple_ids(text_block: str) -> list[str]:
+    """Extrae todos los tweet IDs válidos de un bloque de texto."""
+    if not text_block:
+        return []
+    ids = []
+    for line in text_block.strip().splitlines():
+        tid = extract_tweet_id_from_url(line.strip())
+        if tid:
+            ids.append(tid)
+    return list(dict.fromkeys(ids))  # elimina duplicados preservando orden
+
+
 # ===================== Scrapers (cacheados por tweet_id + token) =====================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_replies(tweet_id: str, token: str) -> pd.DataFrame:
@@ -192,10 +205,10 @@ def main_app():
     # Sidebar
     with st.sidebar:
         st.header("⚙️ Configuración")
-        url_input = st.text_input(
-            "URL del Tweet",
-            placeholder="https://x.com/usuario/status/1234567890123456789",
-            help="Pega la URL completa del tweet."
+        urls_input = st.text_area(
+            "URLs de Tweets (una por línea)",
+            placeholder="https://x.com/usuario/status/123...\nhttps://x.com/otro/status/456...",
+            help="Pegá una o más URLs de tweets, una por línea."
         )
         contexto = st.text_area("Contexto (opcional)", help="Ej: Opiniones sobre producto X.")
         ejecutar = st.button("🚀 Ejecutar")
@@ -214,30 +227,39 @@ def main_app():
 
     # ---------- Ejecutar descarga ----------
     if ejecutar:
-        if not parsed_id:
-            st.error("No pude extraer un ID válido de esa URL. Debe tener /status/<número>.")
+        tweet_ids = extract_multiple_ids(urls_input)
+        if not tweet_ids:
+            st.error("No se encontraron IDs válidos en las URLs ingresadas.")
             st.stop()
-        st.session_state["tweet_id"] = parsed_id
-
-        st.subheader("📥 Descargando datos de X/Twitter…")
-        df_replies = get_replies(parsed_id, apify_token)
-        df_quotes  = get_quotes(parsed_id, apify_token)
-
-        # Limpieza básica (excluir original si aparece y duplicados por URL)
-        if "id" in df_replies.columns:
-            df_replies = df_replies[df_replies["id"].astype(str) != str(parsed_id)]
-        if "id" in df_quotes.columns:
-            df_quotes  = df_quotes[df_quotes["id"].astype(str) != str(parsed_id)]
+    
+        st.session_state["tweet_ids"] = tweet_ids
+        st.subheader(f"📥 Descargando datos de {len(tweet_ids)} tweet(s)…")
+    
+        all_replies, all_quotes = [], []
+        for tid in tweet_ids:
+            st.write(f"➡️ Procesando Tweet ID: {tid}")
+            replies = get_replies(tid, apify_token)
+            quotes  = get_quotes(tid, apify_token)
+            if not replies.empty:
+                all_replies.append(replies)
+            if not quotes.empty:
+                all_quotes.append(quotes)
+    
+        df_replies = pd.concat(all_replies, ignore_index=True) if all_replies else pd.DataFrame()
+        df_quotes  = pd.concat(all_quotes, ignore_index=True) if all_quotes else pd.DataFrame()
+    
+        # Limpieza básica
         if "url" in df_replies.columns:
             df_replies = df_replies.drop_duplicates(subset=["url"]).reset_index(drop=True)
         if "url" in df_quotes.columns:
-            df_quotes  = df_quotes.drop_duplicates(subset=["url"]).reset_index(drop=True)
-
+            df_quotes = df_quotes.drop_duplicates(subset=["url"]).reset_index(drop=True)
+    
         st.session_state["df_replies"] = df_replies
         st.session_state["df_quotes"]  = df_quotes
         st.session_state["data_loaded"] = True
+    
+        st.success(f"✅ {len(df_replies)} respuestas y {len(df_quotes)} citas descargadas en total.")
 
-        st.success(f"✅ {len(df_replies)} respuestas y {len(df_quotes)} citas descargadas.")
 
     # ---------- Mostrar datos si están cargados ----------
     if st.session_state["data_loaded"]:
@@ -447,5 +469,6 @@ if "logged_in" not in st.session_state:
 
 if st.session_state["logged_in"]:
     main_app()
+
 
 
